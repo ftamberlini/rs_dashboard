@@ -1,0 +1,149 @@
+# 🎬 World Movie Dashboard
+
+Interactive movie analytics dashboard built with **Streamlit**, powered by **MovieLens** and **IMDb** data.
+
+---
+
+## 📁 Project Structure
+
+```
+movie_dashboard/
+│
+├── app.py                  # Main entry point — navigation + global CSS
+├── data_repository.py      # Data layer class (CSV or DB)
+├── requirements.txt
+│
+├── data/                   # CSV data files (replace with your real data)
+│   ├── movies.csv
+│   ├── directors.csv
+│   ├── writers.csv
+│   ├── tags.csv
+│   └── ratings.csv
+│
+└── pages/
+    ├── dashboard.py        # 🌍 World map dashboard
+    └── movie_detail.py     # 🎬 Film detail page
+```
+
+---
+
+## 🚀 Quick Start
+
+```bash
+# 1. Install dependencies
+pip install -r requirements.txt
+
+# 2. Run the app
+streamlit run app.py
+```
+
+---
+
+## 📊 Pages
+
+### 🌍 World Dashboard
+- **Sidebar filters** — Continent, Language, Director & Writer (Gender / Race / Ethnicity)
+- **KPI metrics** — Total films, countries, avg IMDb & ML ratings, total votes
+- **World bubble map** — Bubble size = number of films; colour = avg IMDb rating
+- **Genre bar charts** — Top 10 MovieLens genres & IMDb genres
+- **Rating scatter** — IMDb vs MovieLens rating per film
+- **Film table** — Searchable list with quick navigation to the detail page
+
+### 🎬 Movie Detail
+- Poster, title, year, budget, gross, language, synopsis
+- MovieLens genres, IMDb genres, community tags with counts
+- IMDb & MovieLens rating progress bars + vote counts
+- Director & writer profile cards (birth year, gender, race, ethnicity, religion, birthplace)
+- Expandable panel with **all individual user ratings and tags** from MovieLens
+
+---
+
+## 🗄️ Data Layer
+
+The `MovieDataRepository` class in `data_repository.py` handles all data access.
+
+### Using CSV files (default)
+Place your CSVs in the `data/` folder. The expected schema is described below.
+
+### Using a relational database
+```python
+from data_repository import MovieDataRepository
+
+repo = MovieDataRepository(
+    use_database=True,
+    db_connection_string="postgresql://user:pass@localhost/movies_db"
+)
+```
+
+---
+
+## 📋 CSV Schema
+
+### movies.csv
+| Column | Type | Description |
+|--------|------|-------------|
+| movie_id | int | Primary key |
+| title | str | Film title |
+| year | int | Release year |
+| budget | float | Budget in USD |
+| gross | float | Box office gross in USD |
+| language | str | Pipe-separated languages e.g. `English\|French` |
+| synopsis | str | Plot summary |
+| movielens_genres | str | Pipe-separated e.g. `Drama\|Crime` |
+| imdb_genres | str | Pipe-separated |
+| image_url | str | Poster URL |
+| country | str | Country of origin |
+| imdb_votes | int | Total IMDb vote count |
+| movielens_votes | int | Total MovieLens vote count |
+| imdb_rating | float | IMDb score (0-10) |
+| movielens_rating | float | MovieLens avg rating (0-5) |
+
+### directors.csv / writers.csv
+| Column | Type |
+|--------|------|
+| director_id / writer_id | int |
+| movie_id | int (FK) |
+| name | str |
+| birth_year | int |
+| gender | str |
+| race | str |
+| ethnicity | str |
+| religion | str |
+| birth_place | str |
+
+### tags.csv
+| Column | Type |
+|--------|------|
+| tag_id | int |
+| movie_id | int (FK) |
+| user_id | int |
+| tag | str |
+| timestamp | int (Unix) |
+
+### ratings.csv
+| Column | Type |
+|--------|------|
+| rating_id | int |
+| movie_id | int (FK) |
+| user_id | int |
+| rating | float |
+| timestamp | int (Unix) |
+| source | str (`movielens` or `imdb`) |
+
+---
+
+## 🔌 Connecting Real MovieLens / IMDb Data
+
+1. Download the [MovieLens dataset](https://grouplens.org/datasets/movielens/)
+2. Download IMDb datasets from [IMDb Datasets](https://developer.imdb.com/non-commercial-datasets/)
+3. Join them on title + year and export to the CSV schema above (or load into PostgreSQL and use the DB mode)
+4. Enrich `directors.csv` and `writers.csv` with diversity data from Wikidata or manual research
+
+---
+
+## 🎨 Design
+
+- Dark cinema-inspired theme (`#0a0a0f` background)
+- Typography: **Bebas Neue** (headers) + **Inter** (body)
+- Accent colour: `#e8b86d` (golden amber)
+- Fully responsive — works on wide monitors and tablets
