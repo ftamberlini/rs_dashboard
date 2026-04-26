@@ -6,7 +6,7 @@ Handles loading and querying movie data from CSV files or relational database.
 import pandas as pd
 import numpy as np
 from pathlib import Path
-from typing import Optional, List, Dict, Any, Tuple
+from typing import Optional, List, Dict, Any
 import os
 
 
@@ -18,52 +18,6 @@ class MovieDataRepository:
 
     DATA_DIR = Path(__file__).parent / "data"
 
-    # Country → (latitude, longitude) mapping for map visualization
-    COUNTRY_COORDS: Dict[str, Tuple[float, float]] = {
-        "USA": (37.0902, -95.7129),
-        "UK": (55.3781, -3.4360),
-        "France": (46.2276, 2.2137),
-        "Germany": (51.1657, 10.4515),
-        "Italy": (41.8719, 12.5674),
-        "Spain": (40.4637, -3.7492),
-        "Japan": (36.2048, 138.2529),
-        "South Korea": (35.9078, 127.7669),
-        "China": (35.8617, 104.1954),
-        "India": (20.5937, 78.9629),
-        "Brazil": (-14.2350, -51.9253),
-        "Mexico": (23.6345, -102.5528),
-        "Argentina": (-38.4161, -63.6167),
-        "Australia": (-25.2744, 133.7751),
-        "Canada": (56.1304, -106.3468),
-        "Russia": (61.5240, 105.3188),
-        "Sweden": (60.1282, 18.6435),
-        "Norway": (60.4720, 8.4689),
-        "Denmark": (56.2639, 9.5018),
-        "Poland": (51.9194, 19.1451),
-        "Portugal": (39.3999, -8.2245),
-        "Iran": (32.4279, 53.6880),
-        "Turkey": (38.9637, 35.2433),
-        "South Africa": (-30.5595, 22.9375),
-        "Nigeria": (9.0820, 8.6753),
-        "Egypt": (26.8206, 30.8025),
-        "Taiwan": (23.6978, 120.9605),
-        "Hong Kong": (22.3193, 114.1694),
-        "Thailand": (15.8700, 100.9925),
-        "Colombia": (4.5709, -74.2973),
-    }
-
-    CONTINENT_BY_COUNTRY: Dict[str, str] = {
-        "USA": "North America", "Canada": "North America", "Mexico": "North America",
-        "UK": "Europe", "France": "Europe", "Germany": "Europe", "Italy": "Europe",
-        "Spain": "Europe", "Portugal": "Europe", "Sweden": "Europe", "Norway": "Europe",
-        "Denmark": "Europe", "Poland": "Europe", "Russia": "Europe",
-        "Japan": "Asia", "South Korea": "Asia", "China": "Asia", "India": "Asia",
-        "Taiwan": "Asia", "Hong Kong": "Asia", "Thailand": "Asia", "Iran": "Asia",
-        "Turkey": "Asia",
-        "Brazil": "South America", "Argentina": "South America", "Colombia": "South America",
-        "Australia": "Oceania",
-        "South Africa": "Africa", "Nigeria": "Africa", "Egypt": "Africa",
-    }
 
     def __init__(self, use_database: bool = False, db_connection_string: Optional[str] = None):
         """
@@ -75,7 +29,12 @@ class MovieDataRepository:
         """
         self.use_database = use_database
         self.db_connection_string = db_connection_string
+        self._country_ref: pd.DataFrame = pd.read_csv(self.DATA_DIR / "country.csv")
+        self.continent_by_country: Dict[str, str] = dict(zip(self._country_ref["iso"], self._country_ref["continent"]))
+        self.iso_by_name: Dict[str, str] = dict(zip(self._country_ref["country"], self._country_ref["iso"]))
+        self.country_coords: Dict[str, Any] = self._load_coords_mapping()
         self._movies: Optional[pd.DataFrame] = None
+        self._movies_country: Optional[pd.DataFrame] = None
         self._directors: Optional[pd.DataFrame] = None
         self._writers: Optional[pd.DataFrame] = None
         self._tags: Optional[pd.DataFrame] = None
@@ -85,12 +44,35 @@ class MovieDataRepository:
     # Internal loaders
     # ------------------------------------------------------------------
 
+    def get_countries_for_continents(self, continents: Optional[List[str]] = None) -> List[str]:
+        df = self._country_ref
+        if continents:
+            df = df[df["continent"].isin(continents)]
+        return sorted(df["country"].dropna().unique().tolist())
+
+    def _load_continent_mapping(self) -> Dict[str, str]:
+        path = self.DATA_DIR / "country.csv"
+        df = pd.read_csv(path)
+        return dict(zip(df["iso"], df["continent"]))
+
+    def _load_coords_mapping(self) -> Dict[str, Any]:
+        path = self.DATA_DIR / "country_coords.csv"
+        df = pd.read_csv(path)
+        return {row["iso"]: (row["latitude"], row["longitude"]) for _, row in df.iterrows()}
+
     def _load_csv(self, filename: str) -> pd.DataFrame:
         path = self.DATA_DIR / filename
         if not path.exists():
             raise FileNotFoundError(f"Data file not found: {path}")
-        return pd.read_csv(path)
-
+        else:
+            text = filename.split(".")[1]
+            if text == 'tsv':
+                df = pd.read_csv(path, sep='\t')
+            else:
+                df = pd.read_csv(path)
+            df.columns = df.columns.str.lower()
+            return df
+            
     def _load_from_db(self, query: str) -> pd.DataFrame:
         from sqlalchemy import create_engine
         engine = create_engine(self.db_connection_string)
@@ -100,8 +82,15 @@ class MovieDataRepository:
     def _enrich_movies(self, df: pd.DataFrame) -> pd.DataFrame:
         """Add computed columns to the movies dataframe."""
         df = df.copy()
-        df["continent"] = df["country"].map(self.CONTINENT_BY_COUNTRY).fillna("Unknown")
-        coords = df["country"].map(self.COUNTRY_COORDS)
+
+        mc = self.movies_country
+        country_str = mc.groupby("movieid")["country"].apply(lambda x: "|".join(x))
+        primary_iso = mc.groupby("movieid")["country"].first()
+
+        df["country"] = df["movieid"].map(country_str)
+        iso = df["movieid"].map(primary_iso)
+        df["continent"] = iso.map(self.continent_by_country).fillna("Unknown")
+        coords = iso.map(self.country_coords)
         df["latitude"] = coords.apply(lambda c: c[0] if isinstance(c, tuple) else np.nan)
         df["longitude"] = coords.apply(lambda c: c[1] if isinstance(c, tuple) else np.nan)
 
@@ -121,9 +110,15 @@ class MovieDataRepository:
             if self.use_database:
                 raw = self._load_from_db("SELECT * FROM movie")
             else:
-                raw = self._load_csv("movies.csv")
+                raw = self._load_csv("movies.tsv")
             self._movies = self._enrich_movies(raw)
         return self._movies
+
+    @property
+    def movies_country(self) -> pd.DataFrame:
+        if self._movies_country is None:
+            self._movies_country = self._load_csv("movies_country.csv")
+        return self._movies_country
 
     @property
     def directors(self) -> pd.DataFrame:
@@ -131,7 +126,7 @@ class MovieDataRepository:
             if self.use_database:
                 self._directors = self._load_from_db("SELECT * FROM director")
             else:
-                self._directors = self._load_csv("directors.csv")
+                self._directors = self._load_csv("directors.tsv")
         return self._directors
 
     @property
@@ -140,7 +135,7 @@ class MovieDataRepository:
             if self.use_database:
                 self._writers = self._load_from_db("SELECT * FROM writer")
             else:
-                self._writers = self._load_csv("writers.csv")
+                self._writers = self._load_csv("writers.tsv")
         return self._writers
 
     @property
@@ -149,7 +144,7 @@ class MovieDataRepository:
             if self.use_database:
                 self._tags = self._load_from_db("SELECT * FROM tags")
             else:
-                self._tags = self._load_csv("tags.csv")
+                self._tags = self._load_csv("tags.tsv")
         return self._tags
 
     @property
@@ -181,9 +176,112 @@ class MovieDataRepository:
     def get_writer_unique_values(self, column: str) -> List[str]:
         return sorted(self.writers[column].dropna().unique().tolist())
 
+    def get_director_gender_dominance(self) -> "pd.Series[str]":
+        counts = (
+            self.directors
+            .assign(gender=self.directors["gender"].str.upper())
+            .groupby("movieid")["gender"]
+            .value_counts()
+            .unstack(fill_value=0)
+        )
+        male = counts.get("MALE", pd.Series(0, index=counts.index))
+        female = counts.get("FEMALE", pd.Series(0, index=counts.index))
+
+        def classify(m, f):
+            if m == 0 and f == 0:
+                return "UNK"
+            if f == 0:
+                return "EM"
+            if m == 0:
+                return "EF"
+            if m >= f:
+                return "MM"
+            return "MF"
+
+        return pd.Series(
+            {mid: classify(int(male.get(mid, 0)), int(female.get(mid, 0))) for mid in counts.index},
+            name="director_gender_dominance",
+        )
+
+    def get_writer_gender_dominance(self) -> "pd.Series[str]":
+        counts = (
+            self.writers
+            .assign(gender=self.writers["gender"].str.upper())
+            .groupby("movieid")["gender"]
+            .value_counts()
+            .unstack(fill_value=0)
+        )
+        male = counts.get("MALE", pd.Series(0, index=counts.index))
+        female = counts.get("FEMALE", pd.Series(0, index=counts.index))
+
+        def classify(m, f):
+            if m == 0 and f == 0:
+                return "UNK"
+            if f == 0:
+                return "EM"
+            if m == 0:
+                return "EF"
+            if m >= f:
+                return "MM"
+            return "MF"
+
+        return pd.Series(
+            {mid: classify(int(male.get(mid, 0)), int(female.get(mid, 0))) for mid in counts.index},
+            name="writer_gender_dominance",
+        )
+
+    def get_director_race_dominance(self) -> "pd.Series[str]":
+        counts = (
+            self.directors
+            .assign(race=self.directors["race"].str.upper())
+            .groupby("movieid")["race"]
+            .value_counts()
+            .unstack(fill_value=0)
+        )
+
+        def classify(row):
+            total = row.sum()
+            if total == 0:
+                return "UNDEFINED"
+            max_count = row.max()
+            top = row[row == max_count]
+            if len(top) > 1:
+                return "MULTI-RACE"
+            return top.index[0]
+
+        return pd.Series(
+            {mid: classify(counts.loc[mid]) for mid in counts.index},
+            name="director_race_dominance",
+        )
+
+    def get_writer_race_dominance(self) -> "pd.Series[str]":
+        counts = (
+            self.writers
+            .assign(race=self.writers["race"].str.upper())
+            .groupby("movieid")["race"]
+            .value_counts()
+            .unstack(fill_value=0)
+        )
+
+        def classify(row):
+            total = row.sum()
+            if total == 0:
+                return "UNDEFINED"
+            max_count = row.max()
+            top = row[row == max_count]
+            if len(top) > 1:
+                return "MULTI-RACE"
+            return top.index[0]
+
+        return pd.Series(
+            {mid: classify(counts.loc[mid]) for mid in counts.index},
+            name="writer_race_dominance",
+        )
+
     def get_filtered_movies(
         self,
         continents: Optional[List[str]] = None,
+        countries: Optional[List[str]] = None,
         languages: Optional[List[str]] = None,
         director_genders: Optional[List[str]] = None,
         director_races: Optional[List[str]] = None,
@@ -201,6 +299,11 @@ class MovieDataRepository:
         if continents:
             df = df[df["continent"].isin(continents)]
 
+        if countries:
+            selected_isos = set(self.iso_by_name.get(c, "") for c in countries) - {""}
+            mask = df["country"].dropna().str.split("|").apply(lambda isos: bool(set(isos) & selected_isos))
+            df = df[mask]
+
         if languages:
             mask = df["language"].apply(
                 lambda x: any(lang in x for lang in languages)
@@ -216,8 +319,8 @@ class MovieDataRepository:
                 dir_df = dir_df[dir_df["race"].isin(director_races)]
             if director_ethnicities:
                 dir_df = dir_df[dir_df["ethnicity"].isin(director_ethnicities)]
-            valid_movie_ids = dir_df["movie_id"].unique()
-            df = df[df["movie_id"].isin(valid_movie_ids)]
+            valid_movie_ids = dir_df["movieid"].unique()
+            df = df[df["movieid"].isin(valid_movie_ids)]
 
         # Writer filters
         if any([writer_genders, writer_races, writer_ethnicities]):
@@ -228,8 +331,8 @@ class MovieDataRepository:
                 wr_df = wr_df[wr_df["race"].isin(writer_races)]
             if writer_ethnicities:
                 wr_df = wr_df[wr_df["ethnicity"].isin(writer_ethnicities)]
-            valid_movie_ids = wr_df["movie_id"].unique()
-            df = df[df["movie_id"].isin(valid_movie_ids)]
+            valid_movie_ids = wr_df["movieid"].unique()
+            df = df[df["movieid"].isin(valid_movie_ids)]
 
         return df.reset_index(drop=True)
 
@@ -240,7 +343,7 @@ class MovieDataRepository:
         agg = (
             filtered_movies.groupby(["country", "continent", "latitude", "longitude"])
             .agg(
-                movie_count=("movie_id", "count"),
+                movie_count=("movieid", "count"),
                 avg_imdb_votes=("imdb_votes", "mean"),
                 avg_movielens_votes=("movielens_votes", "mean"),
                 avg_imdb_rating=("imdb_rating", "mean"),
@@ -250,22 +353,22 @@ class MovieDataRepository:
         )
         return agg
 
-    def get_movie_detail(self, movie_id: int) -> Dict[str, Any]:
+    def get_movie_detail(self, movieid: int) -> Dict[str, Any]:
         """Return a full detail dict for one movie including people, tags, ratings."""
-        movie_row = self.movies[self.movies["movie_id"] == movie_id]
+        movie_row = self.movies[self.movies["movieid"] == movieid]
         if movie_row.empty:
             return {}
 
         movie = movie_row.iloc[0].to_dict()
 
         # Directors
-        dirs = self.directors[self.directors["movie_id"] == movie_id].to_dict("records")
+        dirs = self.directors[self.directors["movieid"] == movieid].to_dict("records")
 
         # Writers
-        wrts = self.writers[self.writers["movie_id"] == movie_id].to_dict("records")
+        wrts = self.writers[self.writers["movieid"] == movieid].to_dict("records")
 
         # Tags with counts
-        movie_tags = self.tags[self.tags["movie_id"] == movie_id]
+        movie_tags = self.tags[self.tags["movieid"] == movieid]
         tag_counts = (
             movie_tags.groupby("tag")
             .size()
@@ -275,7 +378,7 @@ class MovieDataRepository:
         )
 
         # Ratings
-        movie_ratings = self.ratings[self.ratings["movie_id"] == movie_id]
+        movie_ratings = self.ratings[self.ratings["movieid"] == movieid]
         movielens_ratings = movie_ratings[movie_ratings["source"] == "movielens"]
 
         return {
@@ -286,10 +389,10 @@ class MovieDataRepository:
             "user_ratings": movielens_ratings.to_dict("records"),
         }
 
-    def get_movie_user_ratings_and_tags(self, movie_id: int) -> Dict[str, Any]:
+    def get_movie_user_ratings_and_tags(self, movieid: int) -> Dict[str, Any]:
         """Return all user ratings and tags for a specific movie."""
-        ratings = self.ratings[self.ratings["movie_id"] == movie_id].copy()
-        tags = self.tags[self.tags["movie_id"] == movie_id].copy()
+        ratings = self.ratings[self.ratings["movieid"] == movieid].copy()
+        tags = self.tags[self.tags["movieid"] == movieid].copy()
 
         if "timestamp" in ratings.columns:
             ratings["date"] = pd.to_datetime(ratings["timestamp"], unit="s").dt.strftime("%Y-%m-%d")
@@ -311,6 +414,7 @@ class MovieDataRepository:
     def invalidate_cache(self):
         """Force reload of all data on next access."""
         self._movies = None
+        self._movies_country = None
         self._directors = None
         self._writers = None
         self._tags = None

@@ -20,129 +20,144 @@ st.set_page_config(
 # ── Global CSS ────────────────────────────────────────────────────────────────
 st.markdown(
     """
-    <style>
-    @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600&display=swap');
+<style>
 
-    /* Background */
-    [data-testid="stAppViewContainer"] {
-        background: #0a0a0f;
-        color: #e8e8f0;
-    }
-    [data-testid="stSidebar"] {
-        background: #111118;
-        border-right: 1px solid #1e1e2e;
-    }
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600&display=swap');
 
-    /* Typography */
-    h1, h2, h3 {
-        font-family: 'Bebas Neue', sans-serif !important;
-        letter-spacing: 2px;
-    }
-    body, p, div, span, label {
-        font-family: 'Inter', sans-serif !important;
-    }
+/* Background */
+[data-testid="stAppViewContainer"] {
+    background: #ffffff; /* fundo bem claro */
+    color: #2c2c34; /* texto escuro suave */
+}
 
-    /* Metric cards */
-    [data-testid="stMetric"] {
-        background: #16161f;
-        border: 1px solid #2a2a3e;
-        border-radius: 8px;
-        padding: 16px;
-    }
-    [data-testid="stMetricValue"] {
-        color: #e8b86d !important;
-        font-family: 'Bebas Neue', sans-serif !important;
-        font-size: 2rem !important;
-    }
-    [data-testid="stMetricLabel"] {
-        color: #888 !important;
-        font-size: 0.75rem !important;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-    }
+[data-testid="stSidebar"] {
+    background: #eef0f8;
+    border-right: 1px solid #d6d9e6;
+}
 
-    /* Sidebar multiselect */
-    [data-testid="stMultiSelect"] > div {
-        background: #16161f;
-        border-color: #2a2a3e;
-        border-radius: 6px;
-    }
+/* Typography */
+h1, h2, h3 {
+    font-family: 'Bebas Neue', sans-serif !important;
+    letter-spacing: 2px;
+}
 
-    /* Divider */
-    hr { border-color: #2a2a3e; }
+body, p, div, span, label {
+    font-family: 'Inter', sans-serif !important;
+}
 
-    /* Sidebar header */
-    .sidebar-section-title {
-        font-family: 'Bebas Neue', sans-serif;
-        font-size: 0.85rem;
-        letter-spacing: 2px;
-        color: #e8b86d;
-        text-transform: uppercase;
-        margin-top: 12px;
-        margin-bottom: 4px;
-    }
+/* Metric cards */
+[data-testid="stMetric"] {
+    background: #ffffff;
+    border: 1px solid #e0e3ef;
+    border-radius: 2px;
+    padding: 16px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+}
 
-    /* Badge */
-    .genre-badge {
-        display: inline-block;
-        background: #1e1e2e;
-        border: 1px solid #3a3a5e;
-        color: #c8c8e8;
-        border-radius: 4px;
-        padding: 2px 8px;
-        font-size: 0.72rem;
-        margin: 2px;
-        font-family: 'Inter', sans-serif;
-    }
-    .tag-badge {
-        display: inline-block;
-        background: #1a1a10;
-        border: 1px solid #4a4a20;
-        color: #e8e0a0;
-        border-radius: 4px;
-        padding: 2px 8px;
-        font-size: 0.72rem;
-        margin: 2px;
-        font-family: 'Inter', sans-serif;
-    }
-    .person-card {
-        background: #16161f;
-        border: 1px solid #2a2a3e;
-        border-radius: 8px;
-        padding: 12px 16px;
-        margin-bottom: 8px;
-    }
-    .person-name {
-        font-family: 'Bebas Neue', sans-serif;
-        font-size: 1.1rem;
-        color: #e8b86d;
-        letter-spacing: 1px;
-    }
-    .person-detail {
-        font-size: 0.78rem;
-        color: #aaa;
-        margin-top: 4px;
-    }
+[data-testid="stMetricValue"] {
+    color: #1351B4 ;
+    font-family: 'Bebas Neue', sans-serif !important;
+    font-size: 2rem !important;
+}
 
-    /* Page title bar */
-    .page-header {
-        background: linear-gradient(90deg, #1a0a2e 0%, #0a0a0f 60%);
-        border-bottom: 2px solid #e8b86d;
-        padding: 12px 24px;
-        margin-bottom: 24px;
-        border-radius: 8px;
-    }
-    .page-header h1 {
-        color: #e8b86d;
-        font-size: 2.2rem;
-        margin: 0;
-    }
-    .page-header p {
-        color: #888;
-        margin: 0;
-        font-size: 0.85rem;
-    }
-    </style>
+[data-testid="stMetricLabel"] {
+    color: #1b1f25 ;
+    font-weight: 700;
+    font-size: 0.75rem !important;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Sidebar multiselect */
+[data-testid="stMultiSelect"] > div {
+    background: #ffffff;
+    border-color: #dcdff0;
+    border-radius: 2px;
+}
+
+/* Divider */
+hr { border-color: #e2e5f2; }
+
+/* Sidebar header */
+.sidebar-section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color:  #1b1f25 ;
+    text-transform: uppercase;
+    margin-top: 12px;
+    margin-bottom: 4px;
+}
+
+/* Badge */
+.genre-badge {
+    display: inline-block;
+    background: #e8ecfb;
+    border: 1px solid #cfd5f0;
+    color: #4a4a6a;
+    border-radius: 2px;
+    padding: 3px 8px;
+    font-size: 0.72rem;
+    margin: 2px;
+    font-family: 'Inter', sans-serif;
+}
+
+.tag-badge {
+    display: inline-block;
+    background: #fff4e6;
+    border: 1px solid #ffe0c2;
+    color: #1351B4;
+    border-radius: 2px;
+    padding: 3px 8px;
+    font-size: 0.72rem;
+    margin: 2px;
+    font-family: 'Inter', sans-serif;
+}
+
+.person-card {
+    background: #ffffff;
+    border: 1px solid #e0e3ef;
+    border-radius: 2px;
+    padding: 12px 16px;
+    margin-bottom: 8px;
+}
+
+.person-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.1rem;
+    color: #1351B4;
+    letter-spacing: 1px;
+}
+
+.person-detail {
+    font-size: 0.78rem;
+    color: #7a7a88;
+    margin-top: 4px;
+}
+
+/* Page title bar */
+.page-header {
+    background: linear-gradient(90deg, #e9ecfb 0%, #f7f8fd 100%);
+    border-bottom: 2px solid #1351B4;
+    padding: 12px 24px;
+    margin-bottom: 24px;
+    border-radius: 2px;
+}
+
+.page-header h1 {
+    color: #1351B4;
+    font-size: 2.2rem;
+    margin: 0;
+}
+
+.page-header p {
+    color: #7a7a88;
+    margin: 0;
+    font-size: 0.85rem;
+}
+
+</style>
     """,
     unsafe_allow_html=True,
 )

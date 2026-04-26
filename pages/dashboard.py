@@ -29,6 +29,12 @@ def _build_sidebar_filters(repo: MovieDataRepository):
         default=[],
         placeholder="All continents",
     )
+    countries = st.sidebar.multiselect(
+        "Country",
+        options=repo.get_countries_for_continents(continents or None),
+        default=[],
+        placeholder="All countries",
+    )
     languages = st.sidebar.multiselect(
         "Language",
         options=repo.get_unique_values("language"),
@@ -84,6 +90,7 @@ def _build_sidebar_filters(repo: MovieDataRepository):
 
     return dict(
         continents=continents or None,
+        countries=countries or None,
         languages=languages or None,
         director_genders=dir_genders or None,
         director_races=dir_races or None,
@@ -99,9 +106,9 @@ def _build_map(map_data: pd.DataFrame) -> go.Figure:
     if map_data.empty:
         fig = go.Figure()
         fig.update_layout(
-            paper_bgcolor="#0a0a0f",
-            plot_bgcolor="#0a0a0f",
-            geo=dict(bgcolor="#0a0a0f"),
+            paper_bgcolor="#f0f0f8",
+            plot_bgcolor="#f0f0f8",
+            geo=dict(bgcolor="#f0f0f8"),
         )
         return fig
 
@@ -141,27 +148,26 @@ def _build_map(map_data: pd.DataFrame) -> go.Figure:
 
     fig.update_geos(
         showland=True,
-        landcolor="#16161f",
+        landcolor="#d8e4ee",
         showocean=True,
-        oceancolor="#0a0a0f",
+        oceancolor="#c0d4eb",
         showlakes=False,
         showcountries=True,
-        countrycolor="#2a2a3e",
+        countrycolor="#a0b4c8",
         showframe=False,
-        bgcolor="#0a0a0f",
+        bgcolor="#f0f0f8",
     )
 
     fig.update_layout(
-        paper_bgcolor="#0a0a0f",
-        plot_bgcolor="#0a0a0f",
-        font_color="#e8e8f0",
+        paper_bgcolor="#f0f0f8",
+        plot_bgcolor="#f0f0f8",
+        font_color="#333344",
         margin=dict(l=0, r=0, t=0, b=0),
         coloraxis_colorbar=dict(
             title="IMDb Rating",
-            tickfont=dict(color="#888"),
-            titlefont=dict(color="#888"),
-            bgcolor="#16161f",
-            bordercolor="#2a2a3e",
+            tickfont=dict(color="#555566"),
+            bgcolor="#eaeaf4",
+            bordercolor="#c5c5dc",
         ),
         height=520,
     )
@@ -190,19 +196,19 @@ def _build_genre_chart(filtered: pd.DataFrame, genre_col: str, title: str) -> go
             orientation="h",
             marker=dict(
                 color=values,
-                colorscale=[[0, "#2a2a3e"], [1, "#e8b86d"]],
+                colorscale=[[0, "#c0c8f0"], [1, "#7a5ea0"]],
                 showscale=False,
             ),
             text=values,
             textposition="outside",
-            textfont=dict(color="#888", size=11),
+            textfont=dict(color="#555566", size=11),
         )
     )
     fig.update_layout(
-        title=dict(text=title, font=dict(color="#e8b86d", size=14, family="Bebas Neue")),
-        paper_bgcolor="#16161f",
-        plot_bgcolor="#16161f",
-        font_color="#888",
+        title=dict(text=title, font=dict(color="#7a5ea0", size=14, family="Bebas Neue")),
+        paper_bgcolor="#f0f0f8",
+        plot_bgcolor="#f0f0f8",
+        font_color="#555566",
         margin=dict(l=0, r=30, t=40, b=0),
         xaxis=dict(showgrid=False, zeroline=False, visible=False),
         yaxis=dict(showgrid=False, categoryorder="total ascending"),
@@ -232,16 +238,72 @@ def _build_rating_scatter(filtered: pd.DataFrame) -> go.Figure:
     fig.add_shape(
         type="line",
         x0=0, y0=0, x1=10, y1=10,
-        line=dict(color="#2a2a3e", dash="dash"),
+        line=dict(color="#c5c5dc", dash="dash"),
     )
     fig.update_layout(
-        title=dict(text="IMDb vs MovieLens Rating", font=dict(color="#e8b86d", size=14, family="Bebas Neue")),
-        paper_bgcolor="#16161f",
-        plot_bgcolor="#16161f",
-        font_color="#888",
+        title=dict(text="IMDb vs MovieLens Rating", font=dict(color="#7a5ea0", size=14, family="Bebas Neue")),
+        paper_bgcolor="#f0f0f8",
+        plot_bgcolor="#eaeaf4",
+        font_color="#555566",
         margin=dict(l=0, r=0, t=40, b=0),
-        legend=dict(bgcolor="#0a0a0f", bordercolor="#2a2a3e", borderwidth=1),
+        legend=dict(bgcolor="#f0f0f8", bordercolor="#c5c5dc", borderwidth=1),
         height=300,
+    )
+    return fig
+
+
+# ── Gender dominance chart ─────────────────────────────────────────────────────
+_GENDER_COLORS = {
+    "EM":  "#1a3a6b",
+    "MM":  "#2e86c1",
+    "MF":  "#e05c97",
+    "EF":  "#8b1a4a",
+    "UNK": "#555566",
+}
+_GENDER_ORDER = ["EM", "MM", "MF", "EF", "UNK"]
+
+def _build_gender_dominance_chart(
+    filtered: pd.DataFrame,
+    dominance: "pd.Series[str]",
+    title: str,
+) -> go.Figure:
+    df = filtered[["movieid", "continent"]].copy()
+    df["dominance"] = df["movieid"].map(dominance).fillna("UNK")
+
+    counts = (
+        df.groupby(["continent", "dominance"])
+        .size()
+        .unstack(fill_value=0)
+        .reindex(columns=_GENDER_ORDER, fill_value=0)
+    )
+    totals = counts.sum(axis=1)
+    pct = counts.div(totals, axis=0).mul(100).round(1)
+    continents = pct.index.tolist()
+
+    fig = go.Figure()
+    for cat in _GENDER_ORDER:
+        fig.add_trace(go.Bar(
+            name=cat,
+            y=continents,
+            x=pct[cat],
+            orientation="h",
+            marker_color=_GENDER_COLORS[cat],
+            hovertemplate=f"<b>{cat}</b>: %{{x:.1f}}%<extra></extra>",
+        ))
+
+    fig.update_layout(
+        barmode="stack",
+        bargap=0.35,
+        title=dict(text=title, font=dict(color="#7a5ea0", size=14, family="Bebas Neue")),
+        paper_bgcolor="#f0f0f8",
+        plot_bgcolor="#eaeaf4",
+        font_color="#555566",
+        xaxis=dict(title="% of Films", ticksuffix="%", range=[0, 105], gridcolor="#c5c5dc"),
+        yaxis=dict(title="", gridcolor="#c5c5dc"),
+        legend=dict(bgcolor="#f0f0f8", bordercolor="#c5c5dc", borderwidth=1, orientation="h",
+                    yanchor="bottom", y=1.02, xanchor="center", x=0.5),
+        margin=dict(l=10, r=20, t=60, b=10),
+        height=340,
     )
     return fig
 
@@ -268,7 +330,7 @@ def render():
     avg_ml = filtered["movielens_rating"].mean() if total_films else 0
     total_imdb_votes = filtered["imdb_votes"].sum() if total_films else 0
     total_ml_votes = filtered["movielens_votes"].sum() if total_films else 0
-    countries = filtered["country"].nunique() if total_films else 0
+    countries = filtered["country"].dropna().str.split("|").explode().nunique() if total_films else 0
 
     c1, c2, c3, c4, c5, c6 = st.columns(6)
     c1.metric("🎬 Films", f"{total_films:,}")
@@ -299,6 +361,23 @@ def render():
     with col_right:
         st.plotly_chart(_build_rating_scatter(filtered), use_container_width=True)
 
+    # Gender dominance charts
+    st.markdown("---")
+    st.markdown("#### 👥 Gender Dominance by Continent")
+    dir_dominance = repo.get_director_gender_dominance()
+    wrt_dominance = repo.get_writer_gender_dominance()
+    gcol_left, gcol_right = st.columns(2)
+    with gcol_left:
+        st.plotly_chart(
+            _build_gender_dominance_chart(filtered, dir_dominance, "Director Gender Dominance"),
+            use_container_width=True,
+        )
+    with gcol_right:
+        st.plotly_chart(
+            _build_gender_dominance_chart(filtered, wrt_dominance, "Writer Gender Dominance"),
+            use_container_width=True,
+        )
+
     # Film table
     st.markdown("---")
     st.markdown("#### 📋 Film List")
@@ -309,7 +388,7 @@ def render():
     table_cols = ["title", "year", "country", "continent", "language", "imdb_rating", "movielens_rating", "imdb_votes", "movielens_votes"]
     available_cols = [c for c in table_cols if c in display_df.columns]
 
-    display_df = display_df[available_cols].rename(columns={
+    display_df = display_df[available_cols].sort_values("imdb_votes", ascending=False).rename(columns={
         "title": "Title", "year": "Year", "country": "Country",
         "continent": "Continent", "language": "Language",
         "imdb_rating": "IMDb ⭐", "movielens_rating": "ML ⭐",
