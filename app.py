@@ -31,8 +31,12 @@ st.markdown(
 }
 
 [data-testid="stSidebar"] {
-    background: #eef0f8;
+    background: #ffffff;
     border-right: 1px solid #d6d9e6;
+}
+
+[data-testid="stSidebar"] * {
+    color: #1b1f25 !important;
 }
 
 /* Typography */
@@ -68,11 +72,58 @@ body, p, div, span, label {
     letter-spacing: 1px;
 }
 
+/* Text input (search) */
+[data-testid="stTextInput"] input {
+    background: #ffffff !important;
+    color: #1b1f25 !important;
+    border-color: #c8cdd6 !important;
+}
+
+/* Selectbox */
+[data-testid="stSelectbox"] > div,
+[data-testid="stSelectbox"] [data-baseweb="select"] > div {
+    background: #ffffff !important;
+    color: #1b1f25 !important;
+    border-color: #c8cdd6 !important;
+}
+
+[data-testid="stSelectbox"] li[role="option"] {
+    background: #ffffff !important;
+    color: #1b1f25 !important;
+}
+
+[data-testid="stSelectbox"] li[role="option"]:hover {
+    background: #f0f4fa !important;
+}
+
 /* Sidebar multiselect */
-[data-testid="stMultiSelect"] > div {
-    background: #ffffff;
-    border-color: #dcdff0;
-    border-radius: 2px;
+[data-testid="stSidebar"] [data-testid="stMultiSelect"] > div,
+[data-testid="stSidebar"] [data-testid="stMultiSelect"] input,
+[data-testid="stSidebar"] [data-testid="stMultiSelect"] span {
+    background: #ffffff !important;
+    color: #1b1f25 !important;
+    border-color: #c8cdd6 !important;
+}
+
+[data-testid="stSidebar"] [data-baseweb="select"] > div,
+[data-testid="stSidebar"] [data-baseweb="popover"] {
+    background: #ffffff !important;
+    color: #1b1f25 !important;
+    border-color: #c8cdd6 !important;
+}
+
+[data-testid="stSidebar"] [data-baseweb="tag"] {
+    background: #e8ecf4 !important;
+    color: #1b1f25 !important;
+}
+
+[data-testid="stSidebar"] li[role="option"] {
+    background: #ffffff !important;
+    color: #1b1f25 !important;
+}
+
+[data-testid="stSidebar"] li[role="option"]:hover {
+    background: #f0f4fa !important;
 }
 
 /* Divider */
@@ -132,7 +183,7 @@ hr { border-color: #e2e5f2; }
 
 .person-detail {
     font-size: 0.78rem;
-    color: #7a7a88;
+    color: #444455;
     margin-top: 4px;
 }
 
@@ -152,7 +203,7 @@ hr { border-color: #e2e5f2; }
 }
 
 .page-header p {
-    color: #7a7a88;
+    color: #444455;
     margin: 0;
     font-size: 0.85rem;
 }
@@ -171,8 +222,8 @@ PAGES = {
 with st.sidebar:
     st.markdown(
         "<div style='font-family:Bebas Neue,sans-serif;font-size:1.8rem;"
-        "color:#e8b86d;letter-spacing:3px;padding-bottom:8px;border-bottom:"
-        "1px solid #2a2a3e;margin-bottom:16px;'>🎬 MOVIE LENS</div>",
+        "color:#1351B4;letter-spacing:3px;padding-bottom:8px;border-bottom:"
+        "1px solid #d6d9e6;margin-bottom:16px;'>🎬 MOVIE LENS</div>",
         unsafe_allow_html=True,
     )
     page = st.radio(

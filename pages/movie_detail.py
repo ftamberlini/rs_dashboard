@@ -174,7 +174,7 @@ def render():
 
         st.markdown("**📖 Synopsis:**")
         st.markdown(
-            f"<p style='color:#c8c8e8;line-height:1.6;font-size:0.9rem;'>"
+            f"<p style='color:#2c2c44;line-height:1.6;font-size:0.9rem;'>"
             f"{movie.get('synopsis','—')}</p>",
             unsafe_allow_html=True,
         )
@@ -211,18 +211,18 @@ def render():
         f"""
         <div style='margin-top:12px;'>
           <div style='display:flex;align-items:center;gap:12px;margin-bottom:6px;'>
-            <span style='width:100px;font-size:0.78rem;color:#888;'>IMDb</span>
-            <div style='flex:1;background:#1e1e2e;border-radius:4px;height:10px;'>
+            <span style='width:100px;font-size:0.78rem;color:#444455;'>IMDb</span>
+            <div style='flex:1;background:#d0d8e4;border-radius:4px;height:10px;'>
               <div style='width:{imdb_r*10}%;background:#e8b86d;border-radius:4px;height:10px;'></div>
             </div>
             <span style='width:36px;text-align:right;color:#e8b86d;font-size:0.85rem;'>{imdb_r:.1f}</span>
           </div>
           <div style='display:flex;align-items:center;gap:12px;'>
-            <span style='width:100px;font-size:0.78rem;color:#888;'>MovieLens</span>
-            <div style='flex:1;background:#1e1e2e;border-radius:4px;height:10px;'>
-              <div style='width:{ml_r_10*10}%;background:#7b4fa0;border-radius:4px;height:10px;'></div>
+            <span style='width:100px;font-size:0.78rem;color:#444455;'>MovieLens</span>
+            <div style='flex:1;background:#d0d8e4;border-radius:4px;height:10px;'>
+              <div style='width:{ml_r_10*10}%;background:#2e86c1;border-radius:4px;height:10px;'></div>
             </div>
-            <span style='width:36px;text-align:right;color:#7b4fa0;font-size:0.85rem;'>{ml_r:.1f}</span>
+            <span style='width:36px;text-align:right;color:#1a5276;font-size:0.85rem;'>{ml_r:.1f}</span>
           </div>
         </div>
         """,

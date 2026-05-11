@@ -106,9 +106,9 @@ def _build_map(map_data: pd.DataFrame) -> go.Figure:
     if map_data.empty:
         fig = go.Figure()
         fig.update_layout(
-            paper_bgcolor="#f0f0f8",
-            plot_bgcolor="#f0f0f8",
-            geo=dict(bgcolor="#f0f0f8"),
+            paper_bgcolor="#f0f2f5",
+            plot_bgcolor="#f0f2f5",
+            geo=dict(bgcolor="#f0f2f5"),
         )
         return fig
 
@@ -119,8 +119,8 @@ def _build_map(map_data: pd.DataFrame) -> go.Figure:
         size="movie_count",
         color="avg_imdb_rating",
         color_continuous_scale=[
-            [0.0, "#2a2a3e"],
-            [0.5, "#7b4fa0"],
+            [0.0, "#1a5276"],
+            [0.5, "#5499c7"],
             [1.0, "#e8b86d"],
         ],
         hover_name="country",
@@ -155,19 +155,19 @@ def _build_map(map_data: pd.DataFrame) -> go.Figure:
         showcountries=True,
         countrycolor="#a0b4c8",
         showframe=False,
-        bgcolor="#f0f0f8",
+        bgcolor="#f0f2f5",
     )
 
     fig.update_layout(
-        paper_bgcolor="#f0f0f8",
-        plot_bgcolor="#f0f0f8",
+        paper_bgcolor="#f0f2f5",
+        plot_bgcolor="#f0f2f5",
         font_color="#333344",
         margin=dict(l=0, r=0, t=0, b=0),
         coloraxis_colorbar=dict(
             title="IMDb Rating",
-            tickfont=dict(color="#555566"),
-            bgcolor="#eaeaf4",
-            bordercolor="#c5c5dc",
+            tickfont=dict(color="#1c2d3e"),
+            bgcolor="#e8ecf0",
+            bordercolor="#c0c8d0",
         ),
         height=520,
     )
@@ -196,22 +196,23 @@ def _build_genre_chart(filtered: pd.DataFrame, genre_col: str, title: str) -> go
             orientation="h",
             marker=dict(
                 color=values,
-                colorscale=[[0, "#c0c8f0"], [1, "#7a5ea0"]],
+                colorscale=[[0, "#b8d4e8"], [1, "#1a5276"]],
                 showscale=False,
             ),
             text=values,
             textposition="outside",
-            textfont=dict(color="#555566", size=11),
+            textfont=dict(color="#2c2c44", size=11),
         )
     )
     fig.update_layout(
-        title=dict(text=title, font=dict(color="#7a5ea0", size=14, family="Bebas Neue")),
-        paper_bgcolor="#f0f0f8",
-        plot_bgcolor="#f0f0f8",
-        font_color="#555566",
+        title=dict(text=title, font=dict(color="#1351B4", size=14, family="Bebas Neue")),
+        paper_bgcolor="#f0f2f5",
+        plot_bgcolor="#f0f2f5",
+        font_color="#2c2c44",
         margin=dict(l=0, r=30, t=40, b=0),
         xaxis=dict(showgrid=False, zeroline=False, visible=False),
-        yaxis=dict(showgrid=False, categoryorder="total ascending"),
+        yaxis=dict(showgrid=False, categoryorder="total ascending",
+                   tickfont=dict(color="#1b1f25")),
         height=260,
     )
     return fig
@@ -238,15 +239,18 @@ def _build_rating_scatter(filtered: pd.DataFrame) -> go.Figure:
     fig.add_shape(
         type="line",
         x0=0, y0=0, x1=10, y1=10,
-        line=dict(color="#c5c5dc", dash="dash"),
+        line=dict(color="#b0bec8", dash="dash"),
     )
     fig.update_layout(
-        title=dict(text="IMDb vs MovieLens Rating", font=dict(color="#7a5ea0", size=14, family="Bebas Neue")),
-        paper_bgcolor="#f0f0f8",
-        plot_bgcolor="#eaeaf4",
-        font_color="#555566",
+        title=dict(text="IMDb vs MovieLens Rating", font=dict(color="#1351B4", size=14, family="Bebas Neue")),
+        paper_bgcolor="#f0f2f5",
+        plot_bgcolor="#e8ecf0",
+        font_color="#2c2c44",
         margin=dict(l=0, r=0, t=40, b=0),
-        legend=dict(bgcolor="#f0f0f8", bordercolor="#c5c5dc", borderwidth=1),
+        legend=dict(bgcolor="#f0f2f5", bordercolor="#c0c8d0", borderwidth=1,
+                    font=dict(color="#1b1f25")),
+        xaxis=dict(tickfont=dict(color="#1b1f25"), title_font=dict(color="#1b1f25")),
+        yaxis=dict(tickfont=dict(color="#1b1f25"), title_font=dict(color="#1b1f25")),
         height=300,
     )
     return fig
@@ -258,7 +262,7 @@ _GENDER_COLORS = {
     "MM":  "#2e86c1",
     "MF":  "#e05c97",
     "EF":  "#8b1a4a",
-    "UNK": "#555566",
+    "UNK": "#6b7a8a",
 }
 _GENDER_ORDER = ["EM", "MM", "MF", "EF", "UNK"]
 
@@ -294,14 +298,16 @@ def _build_gender_dominance_chart(
     fig.update_layout(
         barmode="stack",
         bargap=0.35,
-        title=dict(text=title, font=dict(color="#7a5ea0", size=14, family="Bebas Neue")),
-        paper_bgcolor="#f0f0f8",
-        plot_bgcolor="#eaeaf4",
-        font_color="#555566",
-        xaxis=dict(title="% of Films", ticksuffix="%", range=[0, 105], gridcolor="#c5c5dc"),
-        yaxis=dict(title="", gridcolor="#c5c5dc"),
-        legend=dict(bgcolor="#f0f0f8", bordercolor="#c5c5dc", borderwidth=1, orientation="h",
-                    yanchor="bottom", y=1.02, xanchor="center", x=0.5),
+        title=dict(text=title, font=dict(color="#1351B4", size=14, family="Bebas Neue")),
+        paper_bgcolor="#f0f2f5",
+        plot_bgcolor="#e8ecf0",
+        font_color="#2c2c44",
+        xaxis=dict(title="% of Films", ticksuffix="%", range=[0, 105], gridcolor="#c0c8d0",
+                   tickfont=dict(color="#1b1f25"), title_font=dict(color="#1b1f25")),
+        yaxis=dict(title="", gridcolor="#c0c8d0", tickfont=dict(color="#1b1f25")),
+        legend=dict(bgcolor="#f0f2f5", bordercolor="#c0c8d0", borderwidth=1, orientation="h",
+                    yanchor="bottom", y=1.02, xanchor="center", x=0.5,
+                    font=dict(color="#1b1f25")),
         margin=dict(l=10, r=20, t=60, b=10),
         height=340,
     )
